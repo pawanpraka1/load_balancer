@@ -15,6 +15,7 @@ void close_session(server_info_t *server)
 	free(lserver->session);
 	free(server);
 	free(lserver);
+	lb_server->cur_conn--;
 }
 
 void close_server_conn(int efd, server_info_t *server)
@@ -32,7 +33,6 @@ void close_server_conn(int efd, server_info_t *server)
 void close_client_conn(server_info_t *client)
 {
 	close_session(client);
-	lb_server->cur_conn--;
 }
 
 void close_client_pconn(server_info_t *client)
