@@ -96,11 +96,16 @@ extern void close_client_conn(server_info_t *client);
 extern void close_client_pconn(server_info_t *client);
 extern void close_conn(server_info_t *server);
 extern void insert_backend_server(server_info_t *server);
-
+extern void mark_pending_event_invalid(void *sptr);
 
 
 extern server_info_t *lb_server;
 extern server_info_t *stats_server;
 extern server_info_t *client_info_head;
 extern bserver_info_t *bserver_head;
+
+extern struct epoll_event cur_events[MAX_EVENTS];
+extern int event_count;
+
+
 #endif

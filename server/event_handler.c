@@ -1,6 +1,15 @@
 #include <server.h>
 #include <stats.h>
 
+void mark_pending_event_invalid(void *sptr)
+{
+	int i;
+	for (i = 0; i < event_count; i++) {
+		if (cur_events[i].data.ptr == sptr)
+			cur_events[i].events |= EPOLLERR;
+	}
+}
+
 int read_event_handler(server_info_t *server, int efd)
 {
 	struct sockaddr_in c_addr;
@@ -48,6 +57,7 @@ int read_event_handler(server_info_t *server, int efd)
 				ASSERT(!(server->server_flags & LB_SERVER));
 				printf("closing connection data read = %d\n", server->session->buf_len);
 				if (server->server_flags & STATS_CONN) {
+					mark_pending_event_invalid(server);
 					close(server->fd);
 					free(server->session);
 					free(server);

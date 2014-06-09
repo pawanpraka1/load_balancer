@@ -6,6 +6,9 @@ server_info_t *stats_server;
 server_info_t *client_info_head;
 server_info_t *server_info_head;
 
+struct epoll_event cur_events[MAX_EVENTS];
+int event_count;
+
 void insert_into_cpool(server_info_t *client_info)
 {
 	if (lb_server->cpool)
@@ -119,7 +122,7 @@ int main()
 {
 	struct sockaddr_in c_addr, s_addr;
 	int sock_fd, stats_fd, efd;
-	struct epoll_event event, events[MAX_EVENTS];
+	struct epoll_event event;
 
 	sock_fd = init_listening_socket(5555);
 	stats_fd = init_listening_socket(3333);
@@ -139,22 +142,21 @@ int main()
 	lb_server = server;
 
 	while (1) {
-		int n, i;
-		n = epoll_wait (efd, events, MAX_EVENTS, -1);
-		for (i = 0; i < n; i++) {
-			server = (server_info_t *)events[i].data.ptr;
-			if ((events[i].events & EPOLLERR) ||
-					(events[i].events & EPOLLHUP) ||
-					(!(events[i].events & (EPOLLIN | EPOLLOUT)))) {
-				close(server->fd);
+		event_count = epoll_wait (efd, cur_events, MAX_EVENTS, -1);
+		while (event_count--) {
+			server = (server_info_t *)cur_events[event_count].data.ptr;
+			if ((cur_events[event_count].events & EPOLLERR) ||
+					(cur_events[event_count].events & EPOLLHUP) ||
+					(!(cur_events[event_count].events & (EPOLLIN | EPOLLOUT)))) {
+				continue;
 				ASSERT(0);
 			}
 
 			ASSERT(!(server->server_flags & (server->server_flags - 1)));
 
-			if (events[i].events & EPOLLIN)
+			if (cur_events[event_count].events & EPOLLIN)
 				read_event_handler(server, efd);
-			else if(events[i].events & EPOLLOUT)
+			else if(cur_events[event_count].events & EPOLLOUT)
 				write_event_handler(server);
 		}
 	}
