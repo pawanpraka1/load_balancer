@@ -8,48 +8,33 @@ server_info_t *server_info_head;
 
 void insert_into_cpool(server_info_t *client_info)
 {
+	if (lb_server->cpool)
+		lb_server->cpool->prev = &(client_info->cpool);
 	client_info->cpool = lb_server->cpool;
 	lb_server->cpool = client_info;
+	client_info->cpool_prev = &lb_server->cpool;
 	client_info->usage_flags |= CLIENT_CONN_PENDING;
 }
 
-void remove_server_cpool(server_info_t *client_info, server_info_t **head)
+void remove_server_cpool(server_info_t *client_info)
 {
-	server_info_t *sinfo = *head, *psinfo;
-	if (sinfo == client_info) {
-		*head = (*head)->cpool;
-		return;
-	}   
-	psinfo = sinfo;
-	sinfo = sinfo->cpool;
-	while (sinfo != client_info) {
-		psinfo = sinfo;
-		sinfo = sinfo->cpool;
-	}   
-	psinfo->cpool = sinfo->cpool;
+	*(client_info->cpool_prev) = client_info->cpool;
 }
 
 void insert_client_info(server_info_t *client_info)
 {
+	if (client_info_head)
+		client_info_head->prev = &(client_info->next);
 	client_info->next = client_info_head;
+	client_info->prev = &client_info_head; 
 	client_info_head = client_info;
 }
 
-void remove_server_info(server_info_t *client_info, server_info_t **head)
+void remove_server_info(server_info_t *server)
 {
-	server_info_t *sinfo = *head, *psinfo;
-
-	if (sinfo == client_info) {
-		*head = (*head)->next;
-		return;
-	}
-	psinfo = sinfo;
-	sinfo = sinfo->next;
-	while (sinfo != client_info) {
-		psinfo = sinfo;
-		sinfo = sinfo->next;
-	}
-	psinfo->next = sinfo->next;
+	*(server->prev) = server->next;
+	if (server->next)
+		server->next->prev = server->prev;
 }
 
 server_info_t *create_server_info(int fd)
@@ -59,8 +44,11 @@ server_info_t *create_server_info(int fd)
 		ERROR_EXIT("malloc");;
 	bzero((char *)server, server_info_s);
 	server->fd = fd;
+	if (server_info_head)
+		server_info_head->prev = &(server->next);
 	server->next = server_info_head;
 	server_info_head = server;
+	server->prev = &server_info_head;
 	return server;
 }
 
@@ -68,12 +56,14 @@ server_info_t *create_client_info(int efd, int fd)
 {
 	server_info_t *client_info;
 	struct epoll_event event;
-	if (!(client_info = (server_info_t *)malloc(server_info_s)))
+	if (!(client_info = (server_info_t *)malloc(server_info_s))) {
+		close(fd);
 		return NULL;
+	}
 	bzero((char *)client_info, server_info_s);
-	client_info->fd = fd;
 
 	if (!(client_info->session = (session_info_t *)malloc(session_info_s))) {
+		close(fd);
 		free(client_info);
 		return NULL;
 	}
@@ -81,12 +71,13 @@ server_info_t *create_client_info(int efd, int fd)
 
 	event.data.ptr = (void *)client_info;
 	event.events = EPOLLIN;
-	if (0 > epoll_ctl (efd, EPOLL_CTL_ADD, client_info->fd, &event)) {
-		close(client_info->fd);
+	if (0 > epoll_ctl (efd, EPOLL_CTL_ADD, fd, &event)) {
+		close(fd);
 		free(client_info->session);
 		free(client_info);
 		return NULL; 
 	}
+	client_info->fd = fd;
 	return client_info;
 }
 
@@ -156,7 +147,7 @@ int main()
 					(events[i].events & EPOLLHUP) ||
 					(!(events[i].events & (EPOLLIN | EPOLLOUT)))) {
 				close(server->fd);
-				continue;
+				ASSERT(0);
 			}
 
 			ASSERT(!(server->server_flags & (server->server_flags - 1)));

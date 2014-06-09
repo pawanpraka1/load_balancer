@@ -36,6 +36,7 @@ int read_event_handler(server_info_t *server, int efd)
 		}
 		default:
 		{
+			ASSERT(server->session->buf_len <= BUF_LEN);
 			if (BUF_LEN == server->session->buf_len)
 				server->session->buf_len = 0;
 			if (0 > (read_len = read(server->fd, 
@@ -46,27 +47,22 @@ int read_event_handler(server_info_t *server, int efd)
 			} else {
 				ASSERT(!(server->server_flags & LB_SERVER));
 				printf("closing connection data read = %d\n", server->session->buf_len);
-				if (server->server_flags & STATS_CONN)
+				if (server->server_flags & STATS_CONN) {
+					close(server->fd);
+					free(server->session);
+					free(server);
 					stats_server->cur_conn--;
-				else if (server->usage_flags & CLIENT_CONN_PENDING) {
-					remove_server_cpool(server, &(lb_server->cpool));
-					remove_server_info(server, &client_info_head);
-					lb_server->cur_pending_conn--;
-				} else {
-					remove_server_info(server, &client_info_head);
-					attach_pending_connection(efd, server->session->server);
+				} else if (server->usage_flags & CLIENT_CONN_PENDING) {
+					close_client_pconn(server);
+				} else if (server->server_flags & BACKEND_SERVER) {
+					close_server_conn(efd, server);
+				}else {
+					close_client_conn(server);
 				}
-				close(server->fd);
-				free(server->session);
-				free(server);
 				return 0;
 			}
 			if (server->server_flags & STATS_CONN)
 				stats_read_req(server, efd);
-			else if (server->server_flags & BACKEND_SERVER)
-				bserver_session_rhandler(server);
-			else
-				client_session_rhandler(server);
 		}
 	}
 	return 0;
@@ -75,10 +71,18 @@ int read_event_handler(server_info_t *server, int efd)
 int write_event_handler(server_info_t *server)
 {
 	server->write_events++;
-	if (server->server_flags & STATS_CONN)
+	if (server->server_flags & STATS_CONN) {
 		stats_write_res(server);
-	else if (server->server_flags & BACKEND_SERVER)
-		bserver_session_whandler(server);
-	else
-		client_session_whandler(server);
+		stats_server->write_events++;
+	} else {
+		if (server->session->server->session->buf_len > server->session->server->session->buf_read)
+			server->session->server->session->buf_read += write(server->fd, 
+						server->session->server->session->buf + server->session->server->session->buf_read, 
+						server->session->server->session->buf_len - server->session->server->session->buf_read);
+		if (!(server->server_flags & BACKEND_SERVER) &&
+			(server->session->server->session->buf_len == server->session->server->session->buf_read) &&
+			(server->session->server->server_flags & CONN_CLOSED)) {
+			close_client_conn(server);
+		}
+	}
 }

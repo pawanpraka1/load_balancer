@@ -49,7 +49,7 @@ void *my_thread(unsigned int myClient_s)
 
 	else
 	{
-		printf("%s\n", in_buf);
+		printf("received data = %s\n", in_buf);
 		strtok(in_buf, " ");
 		temp = strtok(NULL, " ");
 
@@ -58,7 +58,7 @@ void *my_thread(unsigned int myClient_s)
 
 		if (fh == -1)
 		{
-			printf("File %s not found - sending an HTTP 404 \n", &file_name[1]);
+			printf("File %s not found - sending an HTTP 404 \n", file_name);
 			strcpy(out_buf, NOTOK_404);
 			send(client_s, out_buf, strlen(out_buf), 0);
 			strcpy(out_buf, MESS_404);
@@ -78,6 +78,7 @@ void *my_thread(unsigned int myClient_s)
 				{ 
 					send(client_s, out_buf, buf_len, 0);      
 				}
+				sleep(1);
 			}
 
 			close(fh);
@@ -120,6 +121,7 @@ int main(void)
 		}
 		else
 		{
+			printf("got the connection\n");
 			if (fork() == 0) {
 				close(server_s);
 				my_thread(client_s);

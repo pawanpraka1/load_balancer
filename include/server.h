@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -14,7 +14,7 @@
 #include <assert.h>
 
 #define MAX_CLIENT 100
-#define BUF_LEN 2048
+#define BUF_LEN 65536
 #define MAX_EVENTS 10
 
 #define true 1
@@ -35,11 +35,9 @@ do { \
 #define STATS_SERVER		0x2
 #define STATS_CONN		0x4
 #define BACKEND_SERVER		0x8
+#define CONN_CLOSED		0x10
 
-
-#define BACKEND_SERVER_INUSE	0x1
 #define CLIENT_CONN_PENDING	0x2
-
 
 typedef struct session_info {
 	int buf_len;
@@ -59,37 +57,50 @@ typedef struct server_info {
 	u32bits server_flags;
 	u32bits usage_flags;
 	struct server_info *next;
+	struct server_info **prev;
 	struct server_info *cpool;
+	struct server_info **cpool_prev;
 	session_info_t *session;
 } server_info_t;
 
 #define server_info_s sizeof(server_info_t)
 
+typedef struct bserver_info {
+	u16bits port;
+	u16bits cur_conn;
+	char *ip_str;
+	struct bserver_info *bnext;
+	server_info_t *bserver;
+} bserver_info_t;
+
+#define bserver_info_s sizeof(bserver_info_t)
+
 extern int read_event_handler(server_info_t *server, int efd);
 extern int write_event_handler(server_info_t *server);
 extern int init_listening_socket(u16bits port);
 extern server_info_t *create_server_info(int fd);
-extern server_info_t *create_backend_server(int fd);
+extern server_info_t *create_backend_server();
 extern server_info_t *create_client_info(int efd, int fd);
+extern bserver_info_t *create_bserver_info(char *ip, u16bits port);
 extern void init_backend_server(int efd);
 extern void init_epoll_events(server_info_t *server, int efd);
 extern int attach_backend_lbserver(int efd, server_info_t *client_info);
-extern void attach_pending_connection(int efd, server_info_t *server);
+extern void attach_pending_connection(int efd);
 extern void insert_client_info(server_info_t *client_info);
-extern void remove_server_info(server_info_t *client_info, server_info_t **head);
+extern void remove_server_info(server_info_t *client_info);
 extern void insert_into_cpool(server_info_t *client_info);
-extern void remove_server_cpool(server_info_t *client_info, server_info_t **head);
+extern void remove_server_cpool(server_info_t *client_info);
 extern void remove_form_cpool(server_info_t *client_info);
-extern void bserver_session_rhandler(server_info_t *server);
-extern void bserver_session_whandler(server_info_t *server);
-extern void client_session_rhandler(server_info_t *server);
-extern void client_session_whandler(server_info_t *server);
-
+extern void close_server_conn(int efd, server_info_t *server);
+extern void close_client_conn(server_info_t *client);
+extern void close_client_pconn(server_info_t *client);
+extern void close_conn(server_info_t *server);
+extern void insert_backend_server(server_info_t *server);
 
 
 
 extern server_info_t *lb_server;
 extern server_info_t *stats_server;
 extern server_info_t *client_info_head;
-extern server_info_t *backend_server_head;
+extern bserver_info_t *bserver_head;
 #endif
