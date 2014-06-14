@@ -109,6 +109,7 @@ server_info_t *create_backend_server()
 	}
 	bzero((char *)server->session, session_info_s);
 	server->fd = sock_fd;
+	server->id = server_id++;
 	server->server_flags |= BACKEND_SERVER;
 	return server;
 }

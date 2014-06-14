@@ -8,6 +8,7 @@ server_info_t *server_info_head;
 
 struct epoll_event cur_events[MAX_EVENTS];
 int event_count;
+u32bits server_id;
 
 void insert_into_cpool(server_info_t *client_info)
 {
@@ -31,6 +32,7 @@ void insert_client_info(server_info_t *client_info)
 	client_info->next = client_info_head;
 	client_info->prev = &client_info_head; 
 	client_info_head = client_info;
+	client_info->id = server_id++;
 }
 
 void remove_server_info(server_info_t *server)
@@ -144,13 +146,17 @@ int main()
 	while (1) {
 		event_count = epoll_wait (efd, cur_events, MAX_EVENTS, -1);
 		while (event_count--) {
+			if (0 == cur_events[event_count].events)
+				continue;
 			server = (server_info_t *)cur_events[event_count].data.ptr;
+
 			if ((cur_events[event_count].events & EPOLLERR) ||
 					(cur_events[event_count].events & EPOLLHUP) ||
 					(!(cur_events[event_count].events & (EPOLLIN | EPOLLOUT)))) {
+				close_conn(efd, server);
 				continue;
-				ASSERT(0);
 			}
+
 
 			ASSERT(!(server->server_flags & (server->server_flags - 1)));
 

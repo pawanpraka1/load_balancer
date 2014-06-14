@@ -20,8 +20,9 @@ int ad_stats(server_info_t *server_head, char *buf, u32bits cur_len)
 	server_info_t *sinfo = server_head;
 	while (sinfo) {
 		len = snprintf(&buf[cur_len], BUF_LEN - cur_len,
-				"read event = %u\nwrite events = %u\nbuf_len = %u buf_read = %u\n",
-				sinfo->read_events, sinfo->write_events, sinfo->session->buf_len, sinfo->session->buf_read);
+				"(%u)->(%u)\nread event = %u\nwrite events = %u\nbuf_len = %u buf_read = %u\n\n",
+				sinfo->id, sinfo->session->server->id, sinfo->read_events, 
+				sinfo->write_events, sinfo->session->buf_len, sinfo->session->buf_read);
 		cur_len += len;
 		sinfo = sinfo->next;
 	}
@@ -39,7 +40,11 @@ int stats_write_res(server_info_t *server)
 					lb_server->cur_conn, lb_server->cur_pending_conn, 
 					lb_server->read_events, lb_server->write_events);
 			server->session->buf_len = len;
-			server->session->buf_len += ad_stats(bserver_head->bserver, server->session->buf, server->session->buf_len);
+			bserver_info_t *bserv = bserver_head;
+			while (bserv) {
+				server->session->buf_len += ad_stats(bserv->bserver, server->session->buf, server->session->buf_len);
+				bserv= bserv->bnext;
+			}
 			server->session->buf_len += snprintf(server->session->buf + server->session->buf_len, 
 								BUF_LEN - server->session->buf_len, "\nCLIENT STATS :-\n");
 			server->session->buf_len += ad_stats(client_info_head, server->session->buf, server->session->buf_len);

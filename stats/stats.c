@@ -7,8 +7,6 @@
 #include <netinet/in.h>
 #include <stats.h>
 
-#define BUF_LEN 2048
-
 #define ERROR_EXIT(str) \
 do { \
 	perror(str); \

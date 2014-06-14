@@ -18,6 +18,23 @@ void close_session(server_info_t *server)
 	lb_server->cur_conn--;
 }
 
+void close_conn(int efd, server_info_t *server)
+{
+	if (server->server_flags & STATS_CONN) {
+		mark_pending_event_invalid(server);
+		close(server->fd);
+		free(server->session);
+		free(server);
+		stats_server->cur_conn--;
+	} else if (server->usage_flags & CLIENT_CONN_PENDING) {
+		close_client_pconn(server);
+	} else if (server->server_flags & BACKEND_SERVER) {
+		close_server_conn(efd, server);
+	}else {
+		close_client_conn(server);
+	} 
+}
+
 void close_server_conn(int efd, server_info_t *server)
 {
 	struct epoll_event event;

@@ -50,6 +50,7 @@ typedef struct session_info {
 
 typedef struct server_info {
 	int fd;
+	u32bits id;
 	u32bits read_events;
 	u32bits write_events;
 	u32bits cur_conn;
@@ -94,7 +95,7 @@ extern void remove_form_cpool(server_info_t *client_info);
 extern void close_server_conn(int efd, server_info_t *server);
 extern void close_client_conn(server_info_t *client);
 extern void close_client_pconn(server_info_t *client);
-extern void close_conn(server_info_t *server);
+extern void close_conn(int efd, server_info_t *server);
 extern void insert_backend_server(server_info_t *server);
 extern void mark_pending_event_invalid(void *sptr);
 
@@ -106,6 +107,6 @@ extern bserver_info_t *bserver_head;
 
 extern struct epoll_event cur_events[MAX_EVENTS];
 extern int event_count;
-
+extern u32bits server_id;
 
 #endif

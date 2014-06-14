@@ -6,7 +6,7 @@ void mark_pending_event_invalid(void *sptr)
 	int i;
 	for (i = 0; i < event_count; i++) {
 		if (cur_events[i].data.ptr == sptr)
-			cur_events[i].events |= EPOLLERR;
+			cur_events[i].events = 0;
 	}
 }
 
@@ -46,29 +46,24 @@ int read_event_handler(server_info_t *server, int efd)
 		default:
 		{
 			ASSERT(server->session->buf_len <= BUF_LEN);
+			int start, end;
 			if (BUF_LEN == server->session->buf_len)
 				server->session->buf_len = 0;
-			if (0 > (read_len = read(server->fd, 
-				server->session->buf + server->session->buf_len, BUF_LEN - server->session->buf_len))) 
+			if (server->session->buf_len >= server->session->buf_read) {
+				start = server->session->buf_len;
+				end = BUF_LEN;
+			} else {
+				start = server->session->buf_len;
+				end = server->session->buf_read;
+			}
+			if (0 > (read_len = read(server->fd, server->session->buf + start, end - start)))
 				ASSERT(0);
 			if (read_len > 0) {
 				server->session->buf_len += read_len;
 			} else {
 				ASSERT(!(server->server_flags & LB_SERVER));
 				printf("closing connection data read = %d\n", server->session->buf_len);
-				if (server->server_flags & STATS_CONN) {
-					mark_pending_event_invalid(server);
-					close(server->fd);
-					free(server->session);
-					free(server);
-					stats_server->cur_conn--;
-				} else if (server->usage_flags & CLIENT_CONN_PENDING) {
-					close_client_pconn(server);
-				} else if (server->server_flags & BACKEND_SERVER) {
-					close_server_conn(efd, server);
-				}else {
-					close_client_conn(server);
-				}
+				close_conn(efd, server);
 				return 0;
 			}
 			if (server->server_flags & STATS_CONN)
@@ -82,13 +77,22 @@ int write_event_handler(server_info_t *server)
 {
 	server->write_events++;
 	if (server->server_flags & STATS_CONN) {
-		stats_write_res(server);
 		stats_server->write_events++;
+		stats_write_res(server);
 	} else {
-		if (server->session->server->session->buf_len > server->session->server->session->buf_read)
-			server->session->server->session->buf_read += write(server->fd, 
-						server->session->server->session->buf + server->session->server->session->buf_read, 
-						server->session->server->session->buf_len - server->session->server->session->buf_read);
+		ASSERT(server->session->buf_read <= BUF_LEN);
+		int start, end;
+		if (BUF_LEN == server->session->server->session->buf_read)
+			server->session->server->session->buf_read = 0;
+		if (server->session->server->session->buf_len >= server->session->server->session->buf_read) {
+			start = server->session->server->session->buf_read;
+			end = server->session->server->session->buf_len;
+		} else {
+			start = server->session->server->session->buf_read;
+			end = BUF_LEN;
+		}
+		server->session->server->session->buf_read += write(server->fd, 
+						server->session->server->session->buf + start, end - start);
 		if (!(server->server_flags & BACKEND_SERVER) &&
 			(server->session->server->session->buf_len == server->session->server->session->buf_read) &&
 			(server->session->server->server_flags & CONN_CLOSED)) {
