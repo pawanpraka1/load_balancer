@@ -21,7 +21,7 @@ int ad_stats(server_info_t *server_head, char *buf, u32bits cur_len)
 	while (sinfo) {
 		len = snprintf(&buf[cur_len], BUF_LEN - cur_len,
 				"(%u)->(%u)\nread event = %u\nwrite events = %u\nbuf_len = %u buf_read = %u\n\n",
-				sinfo->id, sinfo->session->server ? sinfo->id, sinfo->session->server->id : -1, 
+				sinfo->id, sinfo->session->server ? sinfo->session->server->id : -1, 
 				sinfo->read_events, sinfo->write_events, sinfo->session->buf_len, sinfo->session->buf_read);
 		cur_len += len;
 		sinfo = sinfo->next;
