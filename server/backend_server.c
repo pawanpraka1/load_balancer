@@ -3,6 +3,14 @@
 bserver_info_t *bserver_head;
 bserver_info_t *cur_lbserver;
 
+server_info_t *get_next_lbserver()
+{
+	cur_lbserver = cur_lbserver->bnext;
+	if (NULL == cur_lbserver)
+		cur_lbserver = bserver_head;
+	return cur_lbserver;
+}
+
 int attach_backend_lbserver(int efd, server_info_t *client_info)
 {
 	struct epoll_event event;
@@ -26,9 +34,7 @@ int attach_backend_lbserver(int efd, server_info_t *client_info)
 		tserver->session->server = client_info;
 		cur_lbserver->cur_conn++;
 		insert_backend_server(tserver);
-		cur_lbserver = cur_lbserver->bnext;
-		if (NULL == cur_lbserver)
-			cur_lbserver = bserver_head;
+		get_next_lbserver();
 		return 0;
 	} while (0);
 
