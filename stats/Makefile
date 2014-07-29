@@ -6,7 +6,7 @@ all : stats
 stats : stats.o
 	$(CC) $(CFLAGS) stats.o -o stats
 
-stats.o : stats.c
+stats.o : stats.c ../include/stats.h
 	$(CC) $(CFLAGS) -o stats.o -c stats.c $(INCLUDE)
 clean :
 	rm *.o stats
