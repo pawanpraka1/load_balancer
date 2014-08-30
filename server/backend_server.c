@@ -3,7 +3,7 @@
 bserver_info_t *bserver_head;
 bserver_info_t *cur_lbserver;
 
-server_info_t *get_next_lbserver()
+bserver_info_t *get_next_lbserver()
 {
 	cur_lbserver = cur_lbserver->bnext;
 	if (NULL == cur_lbserver)

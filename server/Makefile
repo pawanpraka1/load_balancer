@@ -22,4 +22,4 @@ stats_handler.o : stats_handler.c ../include/server.h ../include/stats.h
 session.o : session.c ../include/server.h
 	$(CC) $(CFLAGS) -c session.c -o session.o $(INCLUDE)
 clean :
-	rm *.o server
+	rm -f *.o server

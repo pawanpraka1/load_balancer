@@ -86,7 +86,7 @@ extern bserver_info_t *create_bserver_info(char *ip, u16bits port);
 extern void init_backend_server(int efd);
 extern void init_epoll_events(server_info_t *server, int efd);
 extern int attach_backend_lbserver(int efd, server_info_t *client_info);
-extern server_info_t *get_next_lbserver();
+extern bserver_info_t *get_next_lbserver();
 extern void attach_pending_connection(int efd);
 extern void insert_client_info(server_info_t *client_info);
 extern void remove_server_info(server_info_t *client_info);
