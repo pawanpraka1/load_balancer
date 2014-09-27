@@ -53,7 +53,8 @@ int stats_write_res(server_info_t *server)
 		}
 	}
 
-	if (0 > (len = write(server->fd, server->session->buf, server->session->buf_len)))
+	if (0 > (len = write(server->fd, &server->session->buf[server->session->buf_read], 
+				server->session->buf_len - server->session->buf_read)))
 		ASSERT(0);
 	server->session->buf_read += len;
 	if (server->session->buf_read == server->session->buf_len) {
