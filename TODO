@@ -1,0 +1,5 @@
+Followings are pending task :-	
+
+1. Do the server monitoring and if it is down put it out of lb server queue until it is up
+
+2. If server was down and it comes up, check if there is any pending connection attach the sessoin client to this server.

@@ -1,0 +1,26 @@
+Compile the server :-
+
+cd server
+make clean
+make
+
+Now in server/server.conf put the ip and port entries for the backend servers
+
+127.0.0.1 8888
+127.0.0.1 9999
+
+Now run the server which will liesten 5555 for all load balancing request.
+./server
+
+then send the request to this server on 5555 port.
+
+
+If you want to check stats which is a debug info go to the stats directory
+
+cd stats
+make clean
+make
+
+and then to check the stats do :-
+
+./stats
