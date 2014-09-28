@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <signal.h>
+#include <unistd.h>
 
 #define BUF_SIZE            1024
 #define PORT_NUM            8888
@@ -17,8 +18,30 @@
 #define TRUE                   1
 #define FALSE                  0
 
-#define SEND_STR	"pawan\n"
-#define SEND_STR_LEN	sizeof(SEND_STR)
+
+char *send_str = "pawan\n";
+int lport = 8888;
+
+void server_get_args(int argc, char * argv[])
+{
+	int c;
+	while ((c=getopt(argc, argv, "s:p:")) != EOF)
+	{
+		switch(c)
+		{
+			case 's':
+				send_str = optarg;
+				break;
+			case 'p':
+				lport = atoi(optarg); 
+				break;
+			default:
+				//usage();
+				;
+		}
+	}
+}
+
 
 void *my_thread(void * arg)
 {
@@ -29,21 +52,23 @@ void *my_thread(void * arg)
 
 	myClient_s = *(unsigned int *)arg;
 	while (1) {
-		if(-1 == send(myClient_s, SEND_STR, SEND_STR_LEN, 0)) {
-			perror("send");
-			break;
-		}
 		if (-1 == recv(myClient_s, buf, BUF_SIZE, 0)) {
 			perror("recv");
 			break;
 		}
+
 		printf("%s", buf);
+
+		if(-1 == send(myClient_s, send_str, strlen(send_str), 0)) {
+			perror("send");
+			break;
+		}
 	}
 	close(myClient_s);
 	pthread_exit(NULL);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	unsigned int          server_s;
 	struct sockaddr_in    server_addr;
@@ -62,8 +87,11 @@ int main(void)
 		exit(FALSE);
 	} 
 	signal(SIGPIPE, SIG_IGN);
+	
+	server_get_args(argc, argv);
+
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(PORT_NUM);
+	server_addr.sin_port = htons(lport);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	bind(server_s, (struct sockaddr *)&server_addr, sizeof(server_addr));
 
@@ -72,8 +100,6 @@ int main(void)
 	pthread_attr_init(&attr);
 	while(TRUE)
 	{
-		printf("my server is ready ...\n");  
-
 		addr_len = sizeof(client_addr);
 		if (FALSE == (client_s = accept(server_s, (struct sockaddr *)&client_addr, &addr_len))) {
 			perror("accept");

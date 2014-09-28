@@ -1,9 +1,10 @@
-//#include<sys/socket.h>
-#include <netinet/in.h>//sockaddr_in,INADDR_ANY
-#include<stdlib.h>//exit
-#include<string.h>//memeset
-#include<stdio.h>//scanf
-#include <netdb.h> //host->h_addr
+#include <netinet/in.h>
+#include<stdlib.h>
+#include<string.h>
+#include<stdio.h>
+#include <netdb.h>
+#include <unistd.h>
+
 int main()
 {
 	int sock,b;
@@ -26,12 +27,13 @@ int main()
 		exit(0);
 	}
 	while (1) {
+		if(-1 == send(sock, "Hi\n", 4, 0))
+			perror("send");
+
 		if (0 > (b = recv(sock, p, 1024, 0)))
 			perror("recv");
-		p[b]='\0';
-		printf("%s",p);
-		if(-1 == send(sock, "bye\n", 4, 0))
-			perror("send");
+		p[b] = 0;
+		printf("%s\n", p);
 		sleep(1);
 	}
 	close(sock);
