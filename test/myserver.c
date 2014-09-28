@@ -20,7 +20,7 @@
 
 
 char *send_str = "pawan\n";
-int lport = 8888;
+int lport = PORT_NUM;
 
 void server_get_args(int argc, char * argv[])
 {
