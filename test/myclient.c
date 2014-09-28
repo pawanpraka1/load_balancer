@@ -5,10 +5,12 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#define BUF_SIZE 1024
+
 int main()
 {
 	int sock,b;
-	char p[10];
+	char p[BUF_SIZE];
 	struct sockaddr_in server_addr;
 	struct hostent *host;
 	host=gethostbyname("localhost");
@@ -30,7 +32,7 @@ int main()
 		if(-1 == send(sock, "Hi\n", 4, 0))
 			perror("send");
 
-		if (0 > (b = recv(sock, p, 1024, 0)))
+		if (0 > (b = recv(sock, p, BUF_SIZE - 1, 0)))
 			perror("recv");
 		p[b] = 0;
 		printf("%s\n", p);
