@@ -23,6 +23,8 @@ void insert_into_cpool(server_info_t *client_info)
 void remove_server_cpool(server_info_t *client_info)
 {
 	*(client_info->cpool_prev) = client_info->cpool;
+	if (client_info->cpool)
+		client_info->cpool->cpool_prev = client_info->prev;
 }
 
 void insert_client_info(server_info_t *client_info)

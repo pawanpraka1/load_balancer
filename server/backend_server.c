@@ -94,30 +94,34 @@ server_info_t *create_backend_server()
 	if ((sock_fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0)
 		return NULL;
 
-	bzero((char *) &s_addr, sizeof(s_addr));
-	s_addr.sin_family = AF_INET;
-	s_addr.sin_port = htons(cur_lbserver->port);
-	s_addr.sin_addr.s_addr = inet_addr(cur_lbserver->ip_str);
+	bserver_info_t *lbserver = cur_lbserver;
 
-	if (0 > connect(sock_fd, (struct sockaddr *) &s_addr, sizeof(s_addr))) {
-		close(sock_fd);
-		return NULL;
+	while (1) {
+		bzero((char *) &s_addr, sizeof(s_addr));
+		s_addr.sin_family = AF_INET;
+		s_addr.sin_port = htons(cur_lbserver->port);
+		s_addr.sin_addr.s_addr = inet_addr(cur_lbserver->ip_str);
+		do {
+			if (0 > connect(sock_fd, (struct sockaddr *) &s_addr, sizeof(s_addr)))
+				break;
+			if (!(server = (server_info_t *)malloc(server_info_s)))
+				break;
+			bzero((char *)server, server_info_s);
+			if (!(server->session = (session_info_t *)malloc(session_info_s))) {
+				free(server);
+				break;
+			}
+			bzero((char *)server->session, session_info_s);
+			server->fd = sock_fd;
+			server->id = server_id++;
+			server->server_flags |= BACKEND_SERVER;
+			return server;
+		} while (0);
+		if (lbserver == get_next_lbserver())
+			break;
 	}
-	if (!(server = (server_info_t *)malloc(server_info_s))) {
-		close(sock_fd);
-		return NULL;
-	}
-	bzero((char *)server, server_info_s);
-	if (!(server->session = (session_info_t *)malloc(session_info_s))) {
-		close(sock_fd);
-		free(server);
-		return NULL;
-	}
-	bzero((char *)server->session, session_info_s);
-	server->fd = sock_fd;
-	server->id = server_id++;
-	server->server_flags |= BACKEND_SERVER;
-	return server;
+	close(sock_fd);
+	return NULL;
 }
 
 bserver_info_t *create_bserver_info(char *ip, u16bits port)

@@ -93,7 +93,10 @@ int main(int argc, char *argv[])
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(lport);
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	bind(server_s, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	if (0 > bind(server_s, (struct sockaddr *)&server_addr, sizeof(server_addr))) {
+		perror("bind");
+		exit(FALSE);
+	}
 
 	listen(server_s, PEND_CONNECTIONS);
 
