@@ -13,7 +13,7 @@ u32bits server_id;
 void insert_into_cpool(server_info_t *client_info)
 {
 	if (lb_server->cpool)
-		lb_server->cpool->prev = &(client_info->cpool);
+		lb_server->cpool->cpool_prev = &(client_info->cpool);
 	client_info->cpool = lb_server->cpool;
 	lb_server->cpool = client_info;
 	client_info->cpool_prev = &lb_server->cpool;
