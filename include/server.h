@@ -37,8 +37,6 @@ do { \
 #define BACKEND_SERVER		0x8
 #define CONN_CLOSED		0x10
 
-#define CLIENT_CONN_PENDING	0x2
-
 typedef struct session_info {
 	int buf_len;
 	int buf_read;
@@ -54,13 +52,11 @@ typedef struct server_info {
 	u32bits read_events;
 	u32bits write_events;
 	u32bits cur_conn;
-	u32bits cur_pending_conn;
+	u32bits tot_unhandled_conn;
 	u32bits server_flags;
 	u32bits usage_flags;
 	struct server_info *next;
 	struct server_info **prev;
-	struct server_info *cpool;
-	struct server_info **cpool_prev;
 	session_info_t *session;
 } server_info_t;
 
@@ -87,7 +83,6 @@ extern void init_backend_server(int efd);
 extern void init_epoll_events(server_info_t *server, int efd);
 extern int attach_backend_lbserver(int efd, server_info_t *client_info);
 extern bserver_info_t *get_next_lbserver();
-extern void attach_pending_connection(int efd);
 extern void insert_client_info(server_info_t *client_info);
 extern void remove_server_info(server_info_t *client_info);
 extern void insert_into_cpool(server_info_t *client_info);

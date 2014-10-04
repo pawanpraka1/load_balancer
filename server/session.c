@@ -26,8 +26,6 @@ void close_conn(int efd, server_info_t *server)
 		free(server->session);
 		free(server);
 		stats_server->cur_conn--;
-	} else if (server->usage_flags & CLIENT_CONN_PENDING) {
-		close_client_pconn(server);
 	} else if (server->server_flags & BACKEND_SERVER) {
 		close_server_conn(efd, server);
 	}else {
@@ -55,9 +53,7 @@ void close_client_conn(server_info_t *client)
 void close_client_pconn(server_info_t *client)
 {
 	ASSERT(NULL == client->session->server);
-	remove_server_cpool(client);
 	remove_server_info(client);
-	lb_server->cur_pending_conn--;
 	mark_pending_event_invalid(client);
 	close(client->fd);
 	free(client->session);

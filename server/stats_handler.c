@@ -32,6 +32,7 @@ int ad_stats(server_info_t *server_head, char *buf, u32bits cur_len)
 	cur_len += len;
 	return cur_len;
 }
+
 int stats_write_res(server_info_t *server)
 {
 	int len;
@@ -39,9 +40,9 @@ int stats_write_res(server_info_t *server)
 	if (server->write_events == 1) {
 		if (!strncmp(server->session->buf, STATS, server->session->buf_len)) {
 			len = snprintf(server->session->buf, BUF_LEN,
-					"\nLB STATS :-\ncur client connection = %u\npending connection = %u\n"
+					"\nLB STATS :-\ncur client connection = %u\nunhandled connection = %u\n"
 					"tot_conn = %u\n\nBACKEND STATS :-\n",
-					lb_server->cur_conn, lb_server->cur_pending_conn, lb_server->read_events);
+					lb_server->cur_conn, lb_server->tot_unhandled_conn, lb_server->read_events);
 			server->session->buf_len = len;
 			bserver_info_t *bserv = bserver_head;
 			while (bserv) {

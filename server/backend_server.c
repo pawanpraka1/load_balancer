@@ -42,39 +42,6 @@ int attach_backend_lbserver(int efd, server_info_t *client_info)
 	return -1;
 }
 
-void attach_pending_connection(int efd)
-{
-	struct epoll_event event;
-	server_info_t *cinfo, *sinfo;
-	if (lb_server->cur_pending_conn) {
-		if (!(sinfo = create_backend_server()))
-			return;
-		cinfo = lb_server->cpool;
-		ASSERT(cinfo->usage_flags & CLIENT_CONN_PENDING);
-
-		event.data.ptr = (void *)cinfo;
-		event.events = EPOLLIN | EPOLLOUT;
-		if (0 > epoll_ctl (efd, EPOLL_CTL_MOD, cinfo->fd, &event)) {
-			ASSERT(0);
-			free(sinfo);
-			return;
-		}
-		event.data.ptr = (void *)sinfo;
-		event.events = EPOLLIN | EPOLLOUT;
-		if (0 > epoll_ctl (efd, EPOLL_CTL_ADD, sinfo->fd, &event)) {
-			ASSERT(0);
-			free(sinfo);
-			return;
-		}
-		sinfo->session->server = cinfo;
-		cinfo->session->server = sinfo;
-		lb_server->cpool = cinfo->cpool;
-		cinfo->usage_flags &= ~CLIENT_CONN_PENDING;
-		lb_server->cur_pending_conn--;
-		lb_server->cur_conn++;
-	}
-}
-
 void insert_backend_server(server_info_t *server)
 {
 	ASSERT(server->server_flags & BACKEND_SERVER);
