@@ -82,21 +82,23 @@ int write_event_handler(server_info_t *server)
 	} else {
 		ASSERT(server->session->buf_read <= BUF_LEN);
 		int start, end;
-		if (BUF_LEN == server->session->server->session->buf_read)
-			server->session->server->session->buf_read = 0;
-		if (server->session->server->session->buf_len >= server->session->server->session->buf_read) {
-			start = server->session->server->session->buf_read;
-			end = server->session->server->session->buf_len;
+		server_info_t *rserver = server->session->server;
+		if (BUF_LEN == rserver->session->buf_read)
+			rserver->session->buf_read = 0;
+		if (rserver->session->buf_len >= rserver->session->buf_read) {
+			start = rserver->session->buf_read;
+			end = rserver->session->buf_len;
 		} else {
-			start = server->session->server->session->buf_read;
+			start = rserver->session->buf_read;
 			end = BUF_LEN;
 		}
-		server->session->server->session->buf_read += write(server->fd, 
-						server->session->server->session->buf + start, end - start);
+		rserver->session->buf_read += write(server->fd, 
+						rserver->session->buf + start, end - start);
 		if (!(server->server_flags & BACKEND_SERVER) &&
-			(server->session->server->session->buf_len == server->session->server->session->buf_read) &&
-			(server->session->server->server_flags & CONN_CLOSED)) {
+			(rserver->session->buf_len == rserver->session->buf_read) &&
+			(rserver->server_flags & CONN_CLOSED)) {
 			close_client_conn(server);
 		}
+
 	}
 }

@@ -12,6 +12,8 @@
 #include <fcntl.h>
 #include <malloc.h>
 #include <assert.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 
 #define MAX_CLIENT 100
 #define BUF_LEN 65536
