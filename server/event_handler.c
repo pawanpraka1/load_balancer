@@ -41,8 +41,8 @@ int read_event_handler(server_info_t *server, int efd)
 		{
 			if (!(server->server_flags & STATS_CONN) &&
 			    NULL == server->session->server) {
-				if (0 > attach_backend_lbserver(efd, client_info)) {
-					close_client_pconn(client_info);
+				if (0 > attach_backend_lbserver(efd, server)) {
+					close_client_pconn(server);
 					lb_server->tot_unhandled_conn++;
 				} else {
 					lb_server->cur_conn++;
