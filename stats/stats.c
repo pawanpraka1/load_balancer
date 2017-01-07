@@ -19,7 +19,7 @@ int main()
 
 	bzero((char *) &s_addr, sizeof(s_addr));
 	s_addr.sin_family = AF_INET;
-	s_addr.sin_port = htons(3333);
+	s_addr.sin_port = htons(7342);
 	s_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	if (0 > connect(sock_fd, (struct sockaddr *) &s_addr, sizeof(s_addr)))

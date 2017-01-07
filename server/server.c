@@ -111,8 +111,8 @@ int main()
 	int sock_fd, stats_fd, efd;
 	struct epoll_event event;
 
-	sock_fd = init_listening_socket(5555);
-	stats_fd = init_listening_socket(3333);
+	sock_fd = init_listening_socket(7842);
+	stats_fd = init_listening_socket(7342);
 	init_backend_server(efd);
 
 	if (0 > (efd = epoll_create1 (EPOLL_CLOEXEC)))

@@ -20,7 +20,7 @@ int main()
 		exit(0);
 	}
 	server_addr.sin_family=AF_INET;
-	server_addr.sin_port=htons(5555);
+	server_addr.sin_port=htons(7842);
 	server_addr.sin_addr = *((struct in_addr *)host->h_addr);
 	memset(&(server_addr.sin_zero),'\0',8);
 	if((connect(sock,(struct sockaddr *)&server_addr,sizeof(struct sockaddr)))==-1)
