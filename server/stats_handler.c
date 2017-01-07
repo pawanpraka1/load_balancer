@@ -20,11 +20,57 @@ int ad_stats(server_info_t *server_head, char *buf, u32bits cur_len)
 	u32bits count = 1;
 	server_info_t *sinfo = server_head;
 	while (sinfo) {
+		struct sockaddr_in saddr, daddr = { 0 };
+		char src[INET6_ADDRSTRLEN];
+		char dst[INET6_ADDRSTRLEN] = { 0 };
+
+		socklen_t len = sizeof(saddr);
+		if (0 > getpeername(sinfo->fd, (struct sockaddr *)&saddr, &len)) {
+			perror("getpeername src");
+			return 0;
+		}
+		if (0 > inet_ntop(AF_INET, &(saddr.sin_addr), src, sizeof src)) {
+			perror("inet_ntop src");
+			return 0;
+		}
+
+		if (sinfo->session->server) {
+			server_info_t *pinfo = sinfo->session->server;
+			len = sizeof(daddr);
+			if (0 > getpeername(pinfo->fd, (struct sockaddr *)&daddr, &len)) {
+				perror("getsockname dst");
+				return 0;
+			}
+
+			if (0 > inet_ntop(AF_INET, &(daddr.sin_addr), dst, sizeof dst)) {
+				perror("inet_ntop dst");
+				return 0;
+			}
+		}
+		char lb_info[256] = { 0 };
+
+		if (sinfo->server_flags & BACKEND_SERVER) {
+			struct sockaddr_in laddr;
+			char lb[INET6_ADDRSTRLEN];
+			len = sizeof(laddr);
+			if (0 > getsockname(sinfo->fd, (struct sockaddr *)&laddr, &len)) {
+				perror("getpeername LB");
+				return 0;
+			}
+			if (0 > inet_ntop(AF_INET, &(laddr.sin_addr), lb, sizeof lb)) {
+				perror("inet_ntop dst");
+				return 0;
+			}
+			sprintf(lb_info, "LB ip = %s\nLB port %u\n", lb, ntohs(laddr.sin_port));
+		}
 		len = snprintf(&buf[cur_len], BUF_LEN - cur_len,
-				"%u. (%u)->(%u)\nread event = %u\nwrite events = %u\nbuf_len = %u buf_read = %u\n\n",
-				count, sinfo->id, sinfo->session->server ? sinfo->session->server->id : -1, 
-				sinfo->read_events, sinfo->write_events, sinfo->session->buf_len, sinfo->session->buf_read);
+		    "%u. ip = %s\nport = %u\npeer ip = %s\npeer port = %u\n%s"
+		    "read event = %u\nwrite events = %u\nbuf_len = %u buf_read = %u\n\n", 
+		    count, src, ntohs(saddr.sin_port), dst, ntohs(daddr.sin_port), lb_info, sinfo->read_events, 
+		    sinfo->write_events, sinfo->session->buf_len, sinfo->session->buf_read);
+
 		cur_len += len;
+
 		sinfo = sinfo->next;
 		count++;
 	}

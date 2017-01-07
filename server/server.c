@@ -8,7 +8,6 @@ server_info_t *server_info_head;
 
 struct epoll_event cur_events[MAX_EVENTS];
 int event_count;
-u32bits server_id;
 
 void insert_client_info(server_info_t *client_info)
 {
@@ -17,7 +16,6 @@ void insert_client_info(server_info_t *client_info)
 	client_info->next = client_info_head;
 	client_info->prev = &client_info_head; 
 	client_info_head = client_info;
-	client_info->id = server_id++;
 }
 
 void remove_server_info(server_info_t *server)

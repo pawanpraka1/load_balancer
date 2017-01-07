@@ -50,7 +50,6 @@ typedef struct session_info {
 
 typedef struct server_info {
 	int fd;
-	u32bits id;
 	u32bits read_events;
 	u32bits write_events;
 	u32bits cur_conn;
@@ -105,6 +104,5 @@ extern bserver_info_t *bserver_head;
 
 extern struct epoll_event cur_events[MAX_EVENTS];
 extern int event_count;
-extern u32bits server_id;
 
 #endif
