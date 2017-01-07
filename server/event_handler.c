@@ -25,12 +25,6 @@ int read_event_handler(server_info_t *server, int efd)
 				ASSERT(0);
 			if (client_info = create_client_info(efd, accepted_fd)) {
 				insert_client_info(client_info);
-				if (0 > attach_backend_lbserver(efd, client_info)) {
-					close_client_pconn(client_info);
-					lb_server->tot_unhandled_conn++;
-				} else {
-					lb_server->cur_conn++;
-				}
 			}
 			break;
 		}
@@ -45,6 +39,15 @@ int read_event_handler(server_info_t *server, int efd)
 		}
 		default:
 		{
+			if (!(server->server_flags & STATS_CONN) &&
+			    NULL == server->session->server) {
+				if (0 > attach_backend_lbserver(efd, client_info)) {
+					close_client_pconn(client_info);
+					lb_server->tot_unhandled_conn++;
+				} else {
+					lb_server->cur_conn++;
+				}
+			}
 			ASSERT(server->session->buf_len <= BUF_LEN);
 			int start, end;
 			if (BUF_LEN == server->session->buf_len)
