@@ -9,11 +9,20 @@ Now in server/server.conf put the ip and port entries for the backend servers
 127.0.0.1 8888
 127.0.0.1 9999
 
-Now run the server which will listen on 5555 port for all load balancing request.
+Now run the server which will listen on 7842 port for all load balancing request.
 ./server
 
-then send the request to this server on 5555 port.
+then send the request to this server on 7842 port. It will load balance the requests
+among the servers listed in the server.conf using the round robin policy.
 
+There are test server and client code in the test directory. The server will read 
+the clients data until it gets null character and client will send the null terminated 
+data and waits for server to send null terminated string back. Server can be run using 
+following command :-
+
+./server -p <port> -s <send string>
+
+it will listen on the given port(default 8888) and send <send string> to the client(default "pawan").
 
 If you want to check stats which is a debug info, go to the stats directory
 
