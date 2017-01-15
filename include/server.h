@@ -33,6 +33,8 @@ do { \
 
 #define ASSERT(cond) assert((cond))
 
+#define STATIC_ASSERT(a, b) do { switch (0) case 0: case (a): ; } while (0)
+
 #define LB_SERVER		0x1
 #define STATS_SERVER		0x2
 #define STATS_CONN		0x4
@@ -42,6 +44,7 @@ do { \
 typedef struct session_info {
 	int buf_len;
 	int buf_read;
+	int buf_size;
 	char buf[BUF_LEN];
 	struct server_info *server;
 } session_info_t;

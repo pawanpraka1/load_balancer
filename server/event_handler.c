@@ -49,6 +49,8 @@ int read_event_handler(server_info_t *server, int efd)
 				}
 			}
 			ASSERT(server->session->buf_len <= BUF_LEN);
+			if (BUF_LEN == server->session->buf_size)
+				break;
 			int start, end;
 			if (BUF_LEN == server->session->buf_len)
 				server->session->buf_len = 0;
@@ -63,6 +65,7 @@ int read_event_handler(server_info_t *server, int efd)
 				ASSERT(0);
 			if (read_len > 0) {
 				server->session->buf_len += read_len;
+				server->session->buf_size += read_len;
 			} else {
 				ASSERT(!(server->server_flags & LB_SERVER));
 				printf("closing connection data read = %d\n", server->session->buf_len);
@@ -84,9 +87,10 @@ int write_event_handler(server_info_t *server)
 		stats_write_res(server);
 	} else {
 		ASSERT(server->session->buf_read <= BUF_LEN);
-		int start, end;
+		int start, end, write_len;
 		server_info_t *rserver = server->session->server;
-		if (BUF_LEN == rserver->session->buf_read)
+		if (BUF_LEN == rserver->session->buf_read &&
+		    rserver->session->buf_size > 0)
 			rserver->session->buf_read = 0;
 		if (rserver->session->buf_len >= rserver->session->buf_read) {
 			start = rserver->session->buf_read;
@@ -95,8 +99,10 @@ int write_event_handler(server_info_t *server)
 			start = rserver->session->buf_read;
 			end = BUF_LEN;
 		}
-		rserver->session->buf_read += write(server->fd, 
-						rserver->session->buf + start, end - start);
+		write_len = write(server->fd, rserver->session->buf + start, end - start);
+		rserver->session->buf_read += write_len;
+		rserver->session->buf_size -= write_len;
+
 		if (!(server->server_flags & BACKEND_SERVER) &&
 			(rserver->session->buf_len == rserver->session->buf_read) &&
 			(rserver->server_flags & CONN_CLOSED)) {

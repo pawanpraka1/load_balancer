@@ -36,7 +36,7 @@ void close_conn(int efd, server_info_t *server)
 void close_server_conn(int efd, server_info_t *server)
 {
 	struct epoll_event event;
-	if (server->session->buf_len == server->session->buf_read) {
+	if (0 == server->session->buf_size) {
 		close_session(server);
 	} else {
 		server->server_flags |= CONN_CLOSED;

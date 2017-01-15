@@ -1,5 +1,17 @@
 Followings are pending task :-	
 
-1. code decoration.
+1. make the stats better. Currently load balancer is returning the stats string, which stats
+client is simply printing. Make the data communication between load balancer and stats client 
+be in binary format and let client do the print format handling.
 
-2. remove unnecessary ASSERT.
+2. make the load balancer work for IPV6 also.
+
+3. Implement to handle SSL connection at the load balancer and handle all cpu intensive SSL task at the load balancer only 
+so that backend servers can perform better.
+
+4. Implement other load balancing algorithm, currently we have connection based round robin
+method.
+
+5. code decoration.
+
+6. remove unnecessary ASSERT.

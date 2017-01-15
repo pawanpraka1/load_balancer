@@ -3,6 +3,7 @@
 
 int stats_read_req(server_info_t *server, int efd)
 {
+	STATIC_ASSERT(BUF_LEN >= sizeof(STATS), "buf length should be sufficient enough to read the stats req");
 	struct epoll_event event;
 	stats_server->read_events++;
 	if (server->session->buf_len == sizeof(STATS) - 1) {
@@ -83,6 +84,7 @@ int stats_write_res(server_info_t *server)
 {
 	int len;
 
+	STATIC_ASSERT(BUF_LEN >= 4096, "buf lenght should be more than 4kb");
 	if (server->write_events == 1) {
 		if (!strncmp(server->session->buf, STATS, server->session->buf_len)) {
 			len = snprintf(server->session->buf, BUF_LEN,

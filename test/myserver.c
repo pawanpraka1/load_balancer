@@ -19,7 +19,7 @@
 #define FALSE                  0
 
 
-char *send_str = "pawan\n";
+char *send_str = "pawan";
 int lport = PORT_NUM;
 
 void server_get_args(int argc, char * argv[])
@@ -48,18 +48,21 @@ void *my_thread(void * arg)
 	unsigned int    myClient_s;
 	char           buf[BUF_SIZE];
 	char           *temp;
-	unsigned int   buf_len;
+	int            buf_len, len;
 
 	myClient_s = *(unsigned int *)arg;
 	while (1) {
-		if (-1 == recv(myClient_s, buf, BUF_SIZE, 0)) {
-			perror("recv");
-			break;
-		}
+		buf_len = 0;
+		do {
+			if (-1 == (len = recv(myClient_s, &buf[buf_len], BUF_SIZE - buf_len, 0))) {
+				perror("recv");
+				break;
+			}
+			buf_len += len;
+		} while (len && buf[buf_len - 1]);
+		printf("%s\n", buf);
 
-		printf("%s", buf);
-
-		if(-1 == send(myClient_s, send_str, strlen(send_str), 0)) {
+		if(-1 == send(myClient_s, send_str, strlen(send_str) + 1, 0)) {
 			perror("send");
 			break;
 		}
