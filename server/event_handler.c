@@ -99,7 +99,13 @@ int write_event_handler(server_info_t *server)
 			start = rserver->session->buf_read;
 			end = BUF_LEN;
 		}
-		write_len = write(server->fd, rserver->session->buf + start, end - start);
+		if (start == end)
+			return -1;
+
+		if (0 > (write_len = write(server->fd, rserver->session->buf + start, end - start))) {
+			perror("write");
+			return -1;
+		}
 		rserver->session->buf_read += write_len;
 		rserver->session->buf_size -= write_len;
 
@@ -108,6 +114,5 @@ int write_event_handler(server_info_t *server)
 			(rserver->server_flags & CONN_CLOSED)) {
 			close_client_conn(server);
 		}
-
 	}
 }

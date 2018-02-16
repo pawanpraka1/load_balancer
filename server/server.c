@@ -128,24 +128,23 @@ int main()
 
 	while (1) {
 		event_count = epoll_wait (efd, cur_events, MAX_EVENTS, -1);
-		while (event_count--) {
+		while (event_count-- > 0) {
 			if (0 == cur_events[event_count].events)
 				continue;
 			server = (server_info_t *)cur_events[event_count].data.ptr;
 
 			if ((cur_events[event_count].events & EPOLLERR) ||
-					(cur_events[event_count].events & EPOLLHUP) ||
-					(!(cur_events[event_count].events & (EPOLLIN | EPOLLOUT)))) {
+			    (cur_events[event_count].events & EPOLLHUP) ||
+			    (!(cur_events[event_count].events & (EPOLLIN | EPOLLOUT)))) {
 				close_conn(efd, server);
 				continue;
 			}
-
 
 			ASSERT(!(server->server_flags & (server->server_flags - 1)));
 
 			if (cur_events[event_count].events & EPOLLIN)
 				read_event_handler(server, efd);
-			else if(cur_events[event_count].events & EPOLLOUT)
+			if (cur_events[event_count].events & EPOLLOUT)
 				write_event_handler(server);
 		}
 	}
