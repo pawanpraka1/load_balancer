@@ -18,7 +18,7 @@
 #define PEND_CONNECTIONS	100
 #define NUM_EV			1024
 
-char *send_str = "How are you?";
+char *send_str = "How are you?\n";
 int lport = PORT_NUM;
 
 void server_get_args(int argc, char * argv[])

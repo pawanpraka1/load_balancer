@@ -7,7 +7,7 @@
 #include <signal.h>
 
 #define BUF_SIZE 1024
-#define MSG "Hi Pawan Prakash Sharma!"
+#define MSG "Hi Pawan Prakash Sharma!\n"
 
 int main()
 {

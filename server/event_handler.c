@@ -44,6 +44,7 @@ int read_event_handler(server_info_t *server, int efd)
 				if (0 > attach_backend_lbserver(efd, server)) {
 					close_client_pconn(server);
 					lb_server->tot_unhandled_conn++;
+					return -1;
 				} else {
 					lb_server->cur_conn++;
 				}
